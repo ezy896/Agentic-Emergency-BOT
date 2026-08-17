@@ -1,0 +1,34 @@
+{
+  "United States": {
+    "general": "911",
+    "self_harm": "988 (Suicide & Crisis Lifeline)",
+    "domestic_violence": "1-800-799-7233 (National DV Hotline)",
+    "medical": "911",
+    "fire": "911",
+    "crime_danger": "911"
+  },
+  "United Kingdom": {
+    "general": "999",
+    "self_harm": "116 123 (Samaritans)",
+    "domestic_violence": "0808 2000 247 (National DV Helpline)",
+    "medical": "999",
+    "fire": "999",
+    "crime_danger": "999"
+  },
+  "Pakistan": {
+    "general": "15 (Police), 1122 (Rescue)",
+    "self_harm": "0311-7786264 (Umang Mental Health Helpline)",
+    "domestic_violence": "1099 (Madadgaar National Helpline)",
+    "medical": "1122",
+    "fire": "16",
+    "crime_danger": "15"
+  },
+  "India": {
+    "general": "112",
+    "self_harm": "9152987821 (iCall Helpline)",
+    "domestic_violence": "181 (Women Helpline)",
+    "medical": "108",
+    "fire": "101",
+    "crime_danger": "100"
+  }
+}

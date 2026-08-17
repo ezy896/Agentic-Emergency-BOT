@@ -1,0 +1,108 @@
+"""
+agents/crisis_detector.py
+
+Safety-critical gate. Runs before anything else touches the
+user's input. Combines two layers:
+  1. Fast keyword/rule check — catches obvious cases instantly,
+     no API call needed.
+  2. LLM-based check — catches subtler, indirect language that
+     keywords would miss.
+If EITHER layer flags it, the case is treated as a crisis.
+"""
+
+from __future__ import annotations
+import json
+from unicodedata import category
+
+from groq import Groq
+
+from core.schemas import CaseState, AgentResult, AgentStatus
+from core.base_agent import BaseAgent
+from config.settings import GROQ_API_KEY, MODEL_NAME, CRISIS_CONFIDENCE_THRESHOLD
+
+RED_FLAG_KEYWORDS = [
+    "kill myself",
+    "end my life",
+    "suicide",
+    "want to die",
+    "hurt myself",
+    "harm myself",
+]
+
+with open("config/prompts/crisis_detector_prompt.txt", "r") as f:
+    CRISIS_PROMPT = f.read()
+
+client = Groq(api_key=GROQ_API_KEY)
+
+
+def _keyword_check(text: str) -> bool:
+    lowered = text.lower()
+    return any(keyword in lowered for keyword in RED_FLAG_KEYWORDS)
+
+
+def _llm_check(text: str) -> tuple[bool, float, str]:
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        max_tokens=200,
+        response_format={"type": "json_object"} , # forces valid JSON output
+        messages=[
+            {"role": "system", "content": CRISIS_PROMPT},
+            {"role": "user", "content": text},
+        ],
+    )
+    raw_text = response.choices[0].message.content.strip()
+
+    try:
+        parsed = json.loads(raw_text)
+        detected = bool(parsed.get("crisis_detected", False))
+        confidence = float(parsed.get("confidence", 0.0))
+        reason = str(parsed.get("reason", ""))
+        category = str(parsed.get("reason",""))
+        return detected and confidence >= CRISIS_CONFIDENCE_THRESHOLD, confidence, reason, category
+    except (json.JSONDecodeError, ValueError):
+        return True, 1.0, "Failed to parse classifier output — flagged for safety","general"
+
+
+class CrisisDetector(BaseAgent):
+    name = "crisis_detector"
+    timeout_seconds = 15.0
+
+    def execute(self, state: CaseState) -> AgentResult:
+        text = state.raw_input
+        try:
+            keyword_hit = _keyword_check(text)
+            llm_hit, confidence, llm_reason = _llm_check(text)
+        except Exception as exc:
+            return AgentResult(
+                agent_name=self.name,
+                status=AgentStatus.ESCALATE,
+                output={"crisis_detected": True},
+                confidence=1.0,
+                reason=(
+                    f"Crisis detector encountered an error ({type(exc).__name__}: {exc})"
+                    f"-failing safe by treating this as a potential crisis for human review"
+                ),
+            )
+        crisis_detected = keyword_hit or llm_hit
+        from core.schemas import SituationCategory
+        try:
+            state.situation_category = SituationCategory(category)
+        except ValueError:
+            state.situation_category = SituationCategory.GENERAL
+
+        if keyword_hit and llm_hit:
+            reason = f"Keyword match AND LLM flagged: {llm_reason}"
+        elif keyword_hit:
+            reason = "Keyword match"
+        elif llm_hit:
+            reason = f"LLM flagged: {llm_reason}"
+        else:
+            reason = "No crisis indicators found"
+
+        return AgentResult(
+            agent_name=self.name,
+            status=AgentStatus.ESCALATE if crisis_detected else AgentStatus.SUCCESS,
+            output={"crisis_detected": crisis_detected},
+            confidence=confidence,
+            reason=reason,
+        )
