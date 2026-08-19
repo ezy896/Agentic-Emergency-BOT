@@ -9,7 +9,7 @@ loudly instead of silently corrupting the pipeline.
 """
 
 from  __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
@@ -31,10 +31,6 @@ class AgentStatus(str, Enum):
     FAILURE = "failure"
     ESCALATE = "escalate"
 
-country: Optional[str] = None
-situation_category: Optional[SituationCategory] = None
-
-
 # ---------------------------------------------------------------------------
 # Input coming from the user
 # ---------------------------------------------------------------------------
@@ -42,7 +38,7 @@ situation_category: Optional[SituationCategory] = None
 class UserInput(BaseModel):
     session_id: str
     raw_text: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -58,6 +54,15 @@ class AgentResult(BaseModel):
     reason: Optional[str] = None
 
 
+class SituationCategory(str, Enum):
+    SELF_HARM = "self_harm"
+    DOMESTIC_VIOLENCE = "domestic_violence"
+    MEDICAL = "medical"
+    FIRE = "fire"
+    CRIME_DANGER = "crime_danger"
+    GENERAL = "general"
+
+
 # ---------------------------------------------------------------------------
 # The shared object that flows through every agent / tool call.
 # This is what makes agents reusable both in a fixed pipeline
@@ -67,10 +72,12 @@ class AgentResult(BaseModel):
 class CaseState(BaseModel):
     session_id: str
     raw_input: str
+    country: Optional[str] = None
 
     # crisis / override tracking
     crisis_flag: bool = False
     crisis_reason: Optional[str] = None
+    situation_category: Optional[SituationCategory] = None
 
     # results accumulated as agents run
     intake_summary: Optional[str] = None
@@ -86,13 +93,19 @@ class CaseState(BaseModel):
     turns_used: int = 0
     final_response: Optional[str] = None
 
-class SituationCategory(str, Enum):
-    SELF_HARM = "self_harm"
-    DOMESTIC_VIOLENCE = "domestic_violence"
-    MEDICAL = "medical"
-    FIRE = "fire"
-    CRIME_DANGER = "crime_danger"
-    GENERAL = "general"
+    @property
+    def latest_result(self) -> Optional[AgentResult]:
+        return self.agent_trace[-1] if self.agent_trace else None
+
+    @property
+    def status(self) -> Optional[AgentStatus]:
+        result = self.latest_result
+        return result.status if result else None
+
+    @property
+    def output(self) -> Dict[str, Any]:
+        result = self.latest_result
+        return result.output if result else {}
 
     def add_result(self, result: AgentResult) -> None:
         """Append an agent's result to the trace — call this from every agent."""

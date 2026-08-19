@@ -11,8 +11,9 @@ import json
 
 from core.schemas import CaseState, AgentResult, AgentStatus
 from core.base_agent import BaseAgent
+from config.paths import EMERGENCY_NUMBERS_PATH
 
-with open("storage/emergency_numbers.json", "r") as f:
+with EMERGENCY_NUMBERS_PATH.open(encoding="utf-8") as f:
     EMERGENCY_NUMBERS = json.load(f)
 
 FALLBACK_MESSAGE = (

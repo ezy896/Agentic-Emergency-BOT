@@ -7,12 +7,10 @@ which is specifically the permanent crisis/escalation trail.
 """
 
 import json
-import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from core.schemas import CaseState
-
-CASE_STORE_PATH = "storage/case_log.jsonl"
+from config.paths import CASE_LOG_PATH
 
 
 def save_case(state: CaseState) -> None:
@@ -21,7 +19,7 @@ def save_case(state: CaseState) -> None:
     for every case, regardless of crisis/escalation status.
     """
     entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "session_id": state.session_id,
         "raw_input": state.raw_input,
         "crisis_flag": state.crisis_flag,
@@ -32,6 +30,6 @@ def save_case(state: CaseState) -> None:
         "agent_trace": [result.model_dump() for result in state.agent_trace],
     }
 
-    os.makedirs(os.path.dirname(CASE_STORE_PATH), exist_ok=True)
-    with open(CASE_STORE_PATH, "a") as f:
+    CASE_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with CASE_LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")

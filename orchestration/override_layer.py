@@ -17,16 +17,32 @@ from agents.escalation_agent import EscalationAgent
 from agents.logging_agent import LoggingAgent
 
 
-def handle_request(session_id: str, raw_input: str, run_supervisor_fn) -> CaseState:
+def handle_request(
+    session_id: str | CaseState,
+    raw_input: str | None = None,
+    run_supervisor_fn=None,
+    country: str | None = None,
+) -> CaseState:
     """
     Entry point for a new user request.
 
-    run_supervisor_fn: a function that takes a CaseState and returns
-    a CaseState, run only on the non-crisis path. Passed in rather
-    than imported directly, to avoid a circular import between
-    override_layer.py and supervisor.py.
+    Accepts either the original separate arguments or an existing
+    CaseState as the first argument. The supervisor is imported lazily
+    when no function is supplied, avoiding an import cycle.
     """
-    state = create_case_state(session_id, raw_input)
+    if isinstance(session_id, CaseState):
+        if raw_input is not None:
+            raise TypeError("raw_input must be omitted when passing a CaseState")
+        state = session_id
+    else:
+        if raw_input is None:
+            raise TypeError("raw_input is required when passing session_id")
+        state = create_case_state(session_id, raw_input, country=country)
+
+    if run_supervisor_fn is None:
+        from orchestration.supervisor import run_supervisor
+
+        run_supervisor_fn = run_supervisor
 
     # Step 1: crisis check — always runs, no exceptions
     state = CrisisDetector().run(state)
@@ -37,6 +53,9 @@ def handle_request(session_id: str, raw_input: str, run_supervisor_fn) -> CaseSt
         state.crisis_flag = True
         state.crisis_reason = crisis_result.reason
         state = EscalationAgent().run(state)
+        state = LoggingAgent().run(state)
+        return state
+
     # Step 2: clear — hand off to the supervisor for normal processing
     state = run_supervisor_fn(state)
 

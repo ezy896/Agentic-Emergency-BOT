@@ -8,13 +8,11 @@ or compliance purposes.
 """
 
 import json
-import os
-from datetime import datetime,timezone
-
+from datetime import datetime, timezone
 
 from core.schemas import CaseState
+from config.paths import AUDIT_LOG_PATH
 
-AUDIT_LOG_PATH = "storage/audit_log.jsonl"
 
 
 def write_audit_entry(state: CaseState) -> None:
@@ -37,6 +35,6 @@ def write_audit_entry(state: CaseState) -> None:
         "agent_trace": [result.model_dump() for result in state.agent_trace],
     }
 
-    os.makedirs(os.path.dirname(AUDIT_LOG_PATH), exist_ok=True)
-    with open(AUDIT_LOG_PATH, "a") as f:
+    AUDIT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with AUDIT_LOG_PATH.open("a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")

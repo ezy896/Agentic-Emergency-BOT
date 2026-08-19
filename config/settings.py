@@ -11,7 +11,9 @@ Cloud (st.secrets) without code changes.
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+from config.paths import PROJECT_ROOT
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 
 def _get_secret(key: str) -> str | None:
@@ -24,9 +26,33 @@ def _get_secret(key: str) -> str | None:
     return os.getenv(key)
 
 
-GROQ_API_KEY = _get_secret("GROQ_API_KEY")
+def _resolve_model_name() -> str:
+    preferred = [
+        os.getenv("MODEL_NAME"),
+        "openai/gpt-oss-20b",
+        "qwen/qwen3.6-27b",
+        "meta-llama/llama-prompt-guard-2-86m",
+        "groq/compound-mini",
+    ]
+    preferred = [m for m in preferred if m]
 
-MODEL_NAME = "llama-3.3-70b-versatile"  # solid, fast, good instruction-following
+    if not GROQ_API_KEY:
+        return preferred[0] if preferred else "openai/gpt-oss-20b"
+
+    try:
+        from groq import Groq
+        client = Groq(api_key=GROQ_API_KEY)
+        available = {model.id for model in client.models.list().data}
+        for candidate in preferred:
+            if candidate in available:
+                return candidate
+        return preferred[0] if preferred else "openai/gpt-oss-20b"
+    except Exception:
+        return preferred[0] if preferred else "openai/gpt-oss-20b"
+
+
+GROQ_API_KEY = _get_secret("GROQ_API_KEY")
+MODEL_NAME = _resolve_model_name()
 
 CRISIS_CONFIDENCE_THRESHOLD = 0.8
 

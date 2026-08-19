@@ -16,14 +16,15 @@ intake -> triage -> guidance/escalation order directly.
 from __future__ import annotations
 from groq import Groq
 
-from core.schemas import CaseState, AgentStatus, TriageLevel
+from core.schemas import CaseState, TriageLevel
 from core.state import mark_crisis
+from config.paths import PROMPTS_DIR
 from config.settings import GROQ_API_KEY, MODEL_NAME, MAX_SUPERVISOR_TURNS
 from orchestration.tool_registry import TOOL_DEFINITIONS, run_tool
 from agents.crisis_detector import CrisisDetector
 from agents.escalation_agent import EscalationAgent
 
-with open("config/prompts/supervisor_prompt.txt", "r") as f:
+with (PROMPTS_DIR / "supervisor_prompt.txt").open(encoding="utf-8") as f:
     SUPERVISOR_PROMPT = f.read()
 
 client = Groq(api_key=GROQ_API_KEY)
@@ -47,7 +48,9 @@ def _build_status_message(state: CaseState) -> str:
 
 
 def _recheck_crisis(state: CaseState) -> bool:
-    state_copy = CrisisDetector().run(state)
+    state_copy = state.model_copy(deep=True)
+    state_copy.agent_trace = []
+    state_copy = CrisisDetector().run(state_copy)
     crisis_result = state_copy.agent_trace[-1]
     if crisis_result.output.get("crisis_detected"):
         mark_crisis(state, crisis_result.reason)
@@ -144,3 +147,10 @@ def run_supervisor(state: CaseState) -> CaseState:
                "or contact support directly."
         )
     return state
+
+
+class Supervisor:
+    """Object-oriented compatibility interface for the supervisor loop."""
+
+    def run(self, state: CaseState) -> CaseState:
+        return run_supervisor(state)

@@ -13,9 +13,10 @@ from groq import Groq
 
 from core.schemas import CaseState, AgentResult, AgentStatus, TriageLevel
 from core.base_agent import BaseAgent
+from config.paths import PROMPTS_DIR
 from config.settings import GROQ_API_KEY, MODEL_NAME
 
-with open("config/prompts/triage_prompt.txt", "r") as f:
+with (PROMPTS_DIR / "triage_prompt.txt").open(encoding="utf-8") as f:
     TRIAGE_PROMPT = f.read()
 
 client = Groq(api_key=GROQ_API_KEY)

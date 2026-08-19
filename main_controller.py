@@ -19,7 +19,11 @@ from orchestration.override_layer import handle_request
 from orchestration.supervisor import run_supervisor
 
 
-def handle_user_request(raw_input: str, session_id: str | None = None) -> CaseState:
+def handle_user_request(
+    raw_input: str,
+    session_id: str | None = None,
+    country: str | None = None,
+) -> CaseState:
     """
     Process one user message end to end:
       override_layer -> (crisis path OR supervisor path) -> logging
@@ -38,9 +42,8 @@ def handle_user_request(raw_input: str, session_id: str | None = None) -> CaseSt
     if session_id is None:
         session_id = str(uuid.uuid4())
 
-    state = handle_request(session_id, raw_input, run_supervisor)
+    state = handle_request(session_id, raw_input, run_supervisor, country=country)
     return state
-
 
 # Quick manual test when running this file directly:
 # python main_controller.py
@@ -57,9 +60,9 @@ if __name__ == "__main__":
 
     print()
     print("CRISIS FLAG:", result_state.crisis_flag)
-    print("ESCALATION FLAG:", result_state.escalation_flag)
-    print("TRIAGE LEVEL:", result_state.triage_level)
-    print()
+    print("ESCALATION FLAG:", result_state.escalation_flag)   
+    print("TRIAGE LEVEL:", result_state.triage_level)   
+    print()  
     print("FINAL RESPONSE:")
     print(result_state.final_response)
     print()

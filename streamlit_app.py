@@ -68,6 +68,7 @@ if user_input:
                 state = handle_user_request(
                     raw_input=user_input,
                     session_id=st.session_state.session_id,
+                    country=st.session_state.country,
                 )
                 response_text = state.final_response or "I wasn't able to generate a response — please try again."
                 trace_lines = [f"{r.agent_name} | {r.status}" for r in state.agent_trace]

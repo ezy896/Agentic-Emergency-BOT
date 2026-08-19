@@ -18,9 +18,10 @@ from groq import Groq
 from core.schemas import CaseState, AgentResult, AgentStatus
 from core.base_agent import BaseAgent
 from core.state import mark_escalation
+from config.paths import PROMPTS_DIR
 from config.settings import GROQ_API_KEY, MODEL_NAME
 
-with open("config/prompts/escalation_prompt.txt", "r") as f:
+with (PROMPTS_DIR / "escalation_prompt.txt").open(encoding="utf-8") as f:
     ESCALATION_PROMPT = f.read()
 
 client = Groq(api_key=GROQ_API_KEY)
@@ -42,15 +43,23 @@ class EscalationAgent(BaseAgent):
             f"Reason for escalation: {reason}"
         )
 
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            max_tokens=200,
-            messages=[
-                {"role": "system", "content": ESCALATION_PROMPT},
-                {"role": "user", "content": user_content},
-            ],
-        )
-        escalation_message = response.choices[0].message.content.strip()
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                max_tokens=200,
+                messages=[
+                    {"role": "system", "content": ESCALATION_PROMPT},
+                    {"role": "user", "content": user_content},
+                ],
+            )
+            escalation_message = (response.choices[0].message.content or "").strip()
+            if not escalation_message:
+                raise ValueError("Escalation model returned an empty response")
+        except Exception:
+            escalation_message = (
+                "This situation needs immediate crisis support. Please contact local emergency "
+                "services or a crisis line now."
+            )
 
         # Formally flip the escalation flag on state, using the
         # shared helper from core/state.py for consistency.
