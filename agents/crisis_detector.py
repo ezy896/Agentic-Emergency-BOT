@@ -90,8 +90,18 @@ class CrisisDetector(BaseAgent):
 
     def execute(self, state: CaseState) -> AgentResult:
         text = state.raw_input
+        keyword_hit = _keyword_check(text)
+
+        if keyword_hit:
+            return AgentResult(
+                agent_name=self.name,
+                status=AgentStatus.ESCALATE,
+                output={"crisis_detected": True},
+                confidence=1.0,
+                reason="Keyword match",
+            )
+
         try:
-            keyword_hit = _keyword_check(text)
             llm_hit, confidence, llm_reason, category = _llm_check(text)
         except Exception as exc:
             fallback_detected = _keyword_check(text)
