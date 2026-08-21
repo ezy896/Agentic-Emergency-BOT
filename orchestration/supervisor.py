@@ -23,6 +23,7 @@ from config.settings import GROQ_API_KEY, MODEL_NAME, MAX_SUPERVISOR_TURNS
 from orchestration.tool_registry import TOOL_DEFINITIONS, run_tool
 from agents.crisis_detector import CrisisDetector
 from agents.escalation_agent import EscalationAgent
+from core.emergency_lookup import get_emergency_numbers
 
 with (PROMPTS_DIR / "supervisor_prompt.txt").open(encoding="utf-8") as f:
     SUPERVISOR_PROMPT = f.read()
@@ -32,6 +33,18 @@ client = Groq(api_key=GROQ_API_KEY)
 # If the LLM fails to produce a usable tool call this many times
 # IN A ROW, stop trusting it and fall back to deterministic order.
 MAX_CONSECUTIVE_LLM_FAILURES = 2
+
+
+def _default_safe_message(state: CaseState) -> str:
+    numbers = get_emergency_numbers(state.country)
+    emergency_line = f"please contact {numbers}"
+
+    return (
+        f"I hear you, and I want to make sure you get the right support. "
+        f"If this is urgent, {emergency_line} or a crisis line right away. "
+        f"Otherwise, feel free to tell me a bit more about what's going on "
+        f"and I'll do my best to help."
+    )
 
 
 def _build_status_message(state: CaseState) -> str:
@@ -109,7 +122,7 @@ def run_supervisor(state: CaseState) -> CaseState:
         try:
             response = client.chat.completions.create(
                 model=MODEL_NAME,
-                max_tokens=200,
+                max_tokens=500,
                 messages=[
                     {"role": "system", "content": SUPERVISOR_PROMPT},
                     {"role": "user", "content": status_message},
@@ -117,20 +130,33 @@ def run_supervisor(state: CaseState) -> CaseState:
                 tools=TOOL_DEFINITIONS,
                 tool_choice="auto",
             )
-        except Exception:
+        except Exception as e:
+            print(f"SUPERVISOR LLM CALL ERROR: {type(e).__name__}: {e}")
             consecutive_llm_failures += 1
             state.turns_used += 1
             continue
 
         message = response.choices[0].message
+        print(f"DEBUG — tool_calls: {message.tool_calls}, content: {message.content!r}, finish_reason: {response.choices[0].finish_reason}")
 
         if not message.tool_calls:
             if not state.final_response:
-                state.final_response = state.guidance_output or "Unable to produce a response."
+                state.final_response = (
+                    state.guidance_output
+                    or (message.content or "").strip()
+                    or _default_safe_message(state)
+                )
             return state
 
         tool_call = message.tool_calls[0]
         tool_name = tool_call.function.name
+
+        # Guard against the LLM re-calling a tool whose output we already
+        # have — don't rely on prompt instructions alone for this.
+        if tool_name == "intake_agent" and state.intake_summary:
+            tool_name = "triage_agent"
+        elif tool_name == "triage_agent" and state.triage_level:
+            tool_name = "escalation_agent" if state.triage_level.value in ("high", "critical") else "guidance_agent"
 
         try:
             state = run_tool(tool_name, state)
@@ -141,11 +167,7 @@ def run_supervisor(state: CaseState) -> CaseState:
             continue
 
     if not state.final_response:
-        state.final_response = (
-            state.guidance_output
-            or "We were unable to fully process your request. Please try again "
-               "or contact support directly."
-        )
+        state.final_response = state.guidance_output or _default_safe_message(state)
     return state
 
 

@@ -54,7 +54,7 @@ def _resolve_model_name() -> str:
 GROQ_API_KEY = _get_secret("GROQ_API_KEY")
 MODEL_NAME = _resolve_model_name()
 
-CRISIS_CONFIDENCE_THRESHOLD = 0.8
+CRISIS_CONFIDENCE_THRESHOLD = 0.5
 
 MAX_SUPERVISOR_TURNS = 10
 

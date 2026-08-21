@@ -11,6 +11,8 @@ Category guidance:
 - crime_danger: threats of violence from others, being followed, robbery, immediate physical danger
 - general: doesn't clearly fit the above, or unclear
 
+Also treat as a crisis: being trapped, stranded, or in immediate physical danger from a natural disaster (flood, earthquake, storm, structural collapse, extreme weather, etc.), being lost or stranded somewhere dangerous, or any situation where the person's physical safety is at immediate risk — even if it doesn't fit self_harm, domestic_violence, fire, or crime_danger specifically. Use "general" as the category in these cases if none of the others fit, but still set crisis_detected to true.
+
 Be sensitive to indirect or subtle language, not just explicit statements. If uncertain about crisis_detected, err toward flagging it for human review rather than dismissing it.
 
 Do not provide advice, commentary, or any text outside the json object.

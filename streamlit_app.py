@@ -7,11 +7,25 @@ for each message and displays the response, along with an optional
 debug view of the internal agent trace.
 """
 
+import time
 import streamlit as st
 
 from main_controller import handle_user_request
 
 st.set_page_config(page_title="Emergency Support Assistant", page_icon="🆘")
+
+
+def _stream_text(text: str, delay: float = 0.02):
+    """
+    Yields the response word by word so st.write_stream can render it
+    progressively, ChatGPT-style. The backend still fully resolves the
+    answer first (important for a safety-critical tool — an escalation
+    message should never be shown half-formed) — this only controls
+    how it's revealed on screen.
+    """
+    for word in text.split(" "):
+        yield word + " "
+        time.sleep(delay)
 
 st.title("🆘 Emergency Support Assistant")
 st.caption(
@@ -43,15 +57,31 @@ for msg in st.session_state.messages:
             with st.expander("Agent trace"):
                 for line in msg["trace"]:
                     st.text(line)
+
+# Country gate — only committed once the person actually picks one,
+# so a rerun (e.g. after selecting a new value) doesn't silently
+# lock in whatever the selectbox's default happened to be.
 if "country" not in st.session_state:
     st.session_state.country = None
 
 if st.session_state.country is None:
-    st.session_state.country = st.selectbox(
+    selected = st.selectbox(
         "To show you relevant emergency numbers if needed, what's your country?",
-        ["United States", "United Kingdom", "Pakistan", "India", "Other / Prefer not to say"],
+        [
+            "Select your country...",
+            "United States",
+            "United Kingdom",
+            "Pakistan",
+            "India",
+            "Other / Prefer not to say",
+        ],
+        index=0,
     )
+    if selected != "Select your country...":
+        st.session_state.country = selected
+        st.rerun()
     st.stop()  # don't show chat until country is set
+
 # Chat input
 user_input = st.chat_input("What's going on?")
 
@@ -84,7 +114,7 @@ if user_input:
                 )
                 trace_lines = [f"ERROR: {type(exc).__name__}: {exc}"] + traceback.format_exc().splitlines()
 
-        st.write(response_text)
+        st.write_stream(_stream_text(response_text))
         if show_trace:
             with st.expander("Agent trace"):
                 for line in trace_lines:
