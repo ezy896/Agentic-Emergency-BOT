@@ -1,0 +1,319 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.app {
+    min-height: 100vh;
+}
+
+/* HEADER */
+
+.header {
+    background: #111827;
+    color: white;
+    padding: 25px 8%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    margin: 0 0 5px;
+    font-size: 30px;
+}
+
+.header p {
+    margin: 0;
+    color: #cbd5e1;
+}
+
+.system-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+/* MAIN */
+
+.container {
+    width: min(1000px, 92%);
+    margin: 40px auto;
+}
+
+/* CARDS */
+
+.input-card,
+.results {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 25px;
+
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.input-card h2,
+.results h2 {
+    margin-top: 0;
+}
+
+.description {
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* INPUT */
+
+textarea {
+    width: 100%;
+    min-height: 160px;
+
+    padding: 15px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+
+    resize: vertical;
+
+    font-size: 16px;
+    font-family: inherit;
+
+    outline: none;
+}
+
+textarea:focus {
+    border-color: #2563eb;
+}
+
+button {
+    margin-top: 15px;
+
+    padding: 13px 22px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* STATUS */
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+
+    margin: 25px 0;
+}
+
+.info-card {
+    background: #f8fafc;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+
+    padding: 18px;
+}
+
+.info-card span {
+    display: block;
+
+    color: #64748b;
+
+    font-size: 13px;
+
+    margin-bottom: 8px;
+}
+
+.info-card strong {
+    font-size: 16px;
+}
+
+/* RESPONSE */
+
+.response-card {
+    background: #f8fafc;
+
+    border-radius: 8px;
+
+    padding: 22px;
+
+    margin-top: 20px;
+}
+
+.response-card h3 {
+    margin-top: 0;
+}
+
+.response-card p {
+    line-height: 1.7;
+}
+
+/* TRACE */
+
+.trace-card {
+    margin-top: 20px;
+
+    padding: 22px;
+
+    background: #f8fafc;
+
+    border-radius: 8px;
+}
+
+.trace-card h3 {
+    margin-top: 0;
+}
+
+.trace-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 14px;
+
+    margin-top: 8px;
+
+    background: white;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 7px;
+}
+
+.trace-item strong {
+    display: block;
+}
+
+.trace-item p {
+    margin: 5px 0 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+.trace-item span {
+    color: #16a34a;
+
+    font-size: 12px;
+
+    text-transform: uppercase;
+}
+
+.empty {
+    color: #64748b;
+}
+
+/* TURNS */
+
+.turns {
+    margin-top: 20px;
+
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+/* MOBILE */
+
+@media (max-width: 700px) {
+
+    .header {
+        padding: 20px;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 15px;
+    }
+
+    .container {
+        width: 94%;
+    }
+
+    .status-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+.trace-content {
+    width: 100%;
+}
+
+.trace-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.trace-status {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.trace-reason {
+    margin-top: 8px;
+    margin-bottom: 6px;
+}
+
+.trace-confidence {
+    margin: 4px 0;
+    font-size: 13px;
+    opacity: 0.75;
+}
+
+.trace-output {
+    margin-top: 10px;
+}
+
+.trace-output summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.trace-output pre {
+    margin-top: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}

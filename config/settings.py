@@ -31,7 +31,7 @@ def _resolve_model_name() -> str:
         os.getenv("MODEL_NAME"),
         "openai/gpt-oss-20b",
         "qwen/qwen3.6-27b",
-        "meta-llama/llama-prompt-guard-2-86m",
+        "llama-3.3-70b-versatile",
         "groq/compound-mini",
     ]
     preferred = [m for m in preferred if m]

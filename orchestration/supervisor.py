@@ -61,6 +61,18 @@ def _build_status_message(state: CaseState) -> str:
 
 
 def _recheck_crisis(state: CaseState) -> bool:
+    # The override layer already checked this unchanged user message.
+    # Reusing a successful non-crisis result avoids a duplicate classifier
+    # call that can fail and incorrectly divert the request to escalation.
+    if state.agent_trace:
+        first_result = state.agent_trace[0]
+        if (
+            first_result.agent_name == "crisis_detector"
+            and first_result.status.value == "success"
+            and not first_result.output.get("crisis_detected")
+        ):
+            return False
+
     state_copy = state.model_copy(deep=True)
     state_copy.agent_trace = []
     state_copy = CrisisDetector().run(state_copy)
