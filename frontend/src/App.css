@@ -317,3 +317,22 @@ button:disabled {
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+.new-case-button {
+    margin-top: 12px;
+    padding: 10px 16px;
+    border: 1px solid currentColor;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.new-case-button:hover {
+    opacity: 0.8;
+}
+
+.new-case-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

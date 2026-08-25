@@ -7,6 +7,7 @@ function App() {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sessionId, setSessionId] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,11 +19,11 @@ function App() {
     setResponse(null);
 
     try {
-      const data = await processEmergency({
-        raw_input: message,
-        session_id: null,
-        country: "Pakistan",
-      });
+     const data = await processEmergency({
+  raw_input: message,
+  session_id: sessionId,
+  country: "Pakistan",
+});
 
       console.log("Backend response:", data);
 

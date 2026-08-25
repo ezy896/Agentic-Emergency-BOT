@@ -12,6 +12,7 @@ import pytest
 
 from orchestration.override_layer import handle_request
 from orchestration.supervisor import run_supervisor
+from core.schemas import TriageLevel
 
 with open("tests/fixtures/red_flag_examples.json") as f:
     RED_FLAG_EXAMPLES = json.load(f)
@@ -48,6 +49,9 @@ def test_red_flag_input_never_reaches_supervisor(text):
 
     assert state.crisis_flag is True, f"crisis_flag should be True for: '{text}'"
     assert state.escalation_flag is True, f"escalation_flag should be True for: '{text}'"
+    assert state.triage_level == TriageLevel.HIGH, (
+        f"triage_level should be high for crisis input: '{text}'"
+    )
     assert "escalation_agent" in agent_names_called, (
         f"escalation_agent should have run for: '{text}'"
     )

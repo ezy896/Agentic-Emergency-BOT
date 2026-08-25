@@ -10,7 +10,7 @@ control to the supervisor for normal processing.
 
 from __future__ import annotations
 
-from core.schemas import CaseState
+from core.schemas import CaseState, TriageLevel
 from core.state import create_case_state
 from agents.crisis_detector import CrisisDetector
 from agents.escalation_agent import EscalationAgent
@@ -52,6 +52,7 @@ def handle_request(
         # RED FLAG — bypass everything else
         state.crisis_flag = True
         state.crisis_reason = crisis_result.reason
+        state.triage_level = TriageLevel.HIGH
         state = EscalationAgent().run(state)
         state = LoggingAgent().run(state)
         return state

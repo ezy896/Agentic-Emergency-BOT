@@ -45,11 +45,11 @@ class TriageAgent(BaseAgent):
                 {"role": "user", "content": state.intake_summary},
             ],
         )
-        raw_text = response.choices[0].message.content.strip()
-
         try:
+            raw_text = response.choices[0].message.content or ""
             parsed = json.loads(raw_text)
-            level = TriageLevel(parsed.get("triage_level", "low"))
+            raw_level = parsed.get("triage_level")
+            level = TriageLevel(raw_level) if raw_level else TriageLevel.HIGH
             reason = str(parsed.get("reason", ""))
         except (json.JSONDecodeError, ValueError):
             # Fail toward caution, not toward silence — if we can't parse
