@@ -15,9 +15,8 @@ response from going out.
 from __future__ import annotations
 import requests
 
-# Maps the country names shown in the Streamlit dropdown to
-# ISO 3166-1 alpha-2 codes, which the API expects. Add more here
-# if you add more countries to the dropdown.
+# Maps supported country names to ISO 3166-1 alpha-2 codes, which
+# the API expects. Add more countries here as needed.
 COUNTRY_CODES = {
     "United States": "US",
     "United Kingdom": "GB",

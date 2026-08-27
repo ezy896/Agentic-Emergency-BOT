@@ -4,8 +4,7 @@ config/settings.py
 Central place for configuration: API keys, model names,
 thresholds, and limits used across the system.
 
-Works both locally (.env file) and on Streamlit Community
-Cloud (st.secrets) without code changes.
+Loads configuration from a local .env file or environment variables.
 """
 
 import os
@@ -17,12 +16,6 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 
 def _get_secret(key: str) -> str | None:
-    try:
-        import streamlit as st
-        if key in st.secrets:
-            return st.secrets[key]
-    except Exception:
-        pass
     return os.getenv(key)
 
 
@@ -60,7 +53,6 @@ MAX_SUPERVISOR_TURNS = 10
 
 if not GROQ_API_KEY:
     raise RuntimeError(
-        "GROQ_API_KEY is not set. Locally: add it to .env as "
-        "GROQ_API_KEY=your_key_here. On Streamlit Cloud: add it "
-        "under App Settings → Secrets."
+        "GROQ_API_KEY is not set. Add it to .env as "
+        "GROQ_API_KEY=your_key_here or set it as an environment variable."
     )
