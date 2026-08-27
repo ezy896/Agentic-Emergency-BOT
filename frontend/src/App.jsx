@@ -43,46 +43,64 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <div>
-          <h1>Emergency AI</h1>
-          <p>Agentic Emergency Guidance System</p>
+        <div className="brand-lockup">
+          <div className="brand-mark" aria-hidden="true">+</div>
+          <div>
+            <p className="eyebrow">Emergency response assistant</p>
+            <h1>Emergency AI</h1>
+            <p>Clear next steps when every second matters.</p>
+          </div>
         </div>
 
         <div className="system-status">
           <span className="status-dot"></span>
-          System Ready
+          <span><strong>System ready</strong><small>Pakistan response network</small></span>
         </div>
       </header>
 
       <main className="container">
         {/* INPUT */}
         <section className="input-card">
-          <h2>Describe Your Situation</h2>
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow accent">Start here</p>
+              <h2>How can we help right now?</h2>
+            </div>
+            <span className="step-label">01 / 02</span>
+          </div>
 
           <p className="description">
-            Tell the system what is happening. Emergency AI will analyze your
-            situation and determine the appropriate response.
+            Share the key details in your own words. Include your location,
+            immediate danger, and whether anyone is injured.
           </p>
 
           <form onSubmit={handleSubmit}>
+            <label htmlFor="situation">Situation details</label>
             <textarea
+              id="situation"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Example: There is a fire in my building and I cannot get out..."
+              aria-describedby="input-help"
             />
+            <div className="input-meta">
+              <span id="input-help">Do not wait for this tool if you are in immediate danger. Contact local emergency services.</span>
+              <span>{message.length} characters</span>
+            </div>
 
             <button
               type="submit"
               disabled={!message.trim() || loading}
             >
-              {loading ? "Analyzing..." : "Analyze Situation"}
+              {loading ? <><span className="button-spinner" aria-hidden="true"></span>Analyzing situation...</> : <>Analyze situation <span aria-hidden="true">→</span></>}
             </button>
           </form>
         </section>
 
         {/* ERROR */}
         {error && (
-          <div className="error-card">
+          <div className="error-card" role="alert">
+            <strong>We could not complete the analysis</strong>
             {error}
           </div>
         )}
@@ -90,10 +108,16 @@ function App() {
         {/* RESULTS */}
         {response && (
           <section className="results">
-            <h2>Situation Analysis</h2>
+            <div className="section-heading results-heading">
+              <div>
+                <p className="eyebrow accent">Assessment complete</p>
+                <h2>Situation analysis</h2>
+              </div>
+              <span className="step-label">02 / 02</span>
+            </div>
 
             <div className="status-grid">
-              <div className="info-card">
+              <div className={`info-card ${response.crisis_flag ? "critical" : "clear"}`}>
                 <span>Crisis Status</span>
                 <strong>
                   {response.crisis_flag
@@ -116,7 +140,7 @@ function App() {
                 </strong>
               </div>
 
-              <div className="info-card">
+              <div className={`info-card ${response.escalation_flag ? "critical" : "clear"}`}>
                 <span>Escalation</span>
                 <strong>
                   {response.escalation_flag ? "YES" : "NO"}
@@ -126,7 +150,7 @@ function App() {
 
             {/* FINAL RESPONSE */}
             <div className="response-card">
-              <h3>Emergency Guidance</h3>
+              <div className="card-title-row"><h3>Emergency guidance</h3><span className="live-label">PRIORITY</span></div>
 
               <p>{response.final_response}</p>
             </div>
@@ -134,7 +158,7 @@ function App() {
             {/* AGENT TRACE */}
            {/* AGENT TRACE */}
 <div className="trace-card">
-  <h3>Agent Execution Trace</h3>
+  <div className="card-title-row"><h3>Agent execution trace</h3><span className="trace-count">{response.agent_trace?.length || 0} steps</span></div>
 
   {!response.agent_trace ||
   response.agent_trace.length === 0 ? (
